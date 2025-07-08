@@ -37,16 +37,8 @@ export class UsersService {
   }
 
   public async deleteUser(id: number) {
-    // find the user with given ID
-    let user = await this.userRepository.findOneBy({ id });
-
     // delete user
     await this.userRepository.delete(id);
-
-    // delete the profile
-    if (user?.profile?.id) {
-      await this.profileRepository.delete(user.profile.id);
-    }
 
     // send a response\
     return { deleted: true };
