@@ -14,37 +14,41 @@ export class UsersService {
   ) {}
 
   getAllUsers() {
-    return this.userRepository.find();
+    return this.userRepository.find({
+      relations: {
+        profile: true,
+      },
+    });
   }
 
   public async createUser(userDto: CreateUserDto) {
-    // Ensure there's always a profile object
+    // Create a profile and save
+
     userDto.profile = userDto.profile ?? {};
 
-    // Step 1: Create and save the profile entity
-    const profile = this.profileRepository.create(userDto.profile);
-    await this.profileRepository.save(profile);
-
-    // Step 2: Create the user and assign the saved profile
+    // Create User Object
     const user = this.userRepository.create({
       ...userDto,
-      profile, // Assigning the saved profile
+      profile: userDto.profile ?? undefined, // ensure null isn't passed
     });
 
-    // Step 3: Save the user entity (with the profile relation)
+    // save the user object
     return await this.userRepository.save(user);
-    // userDto.profile = userDto.profile ?? {};
-    // let profile = this.profileRepository.create(userDto.profile);
-    // await this.profileRepository.save(profile);
+  }
 
-    // // let profile = this.profileRepository.create(userDto.profile);
-    // const user = this.userRepository.create({
-    //   ...userDto,
-    //   profile, // Assigning the saved profile
-    // });
-    // // create User Object
-    // // set the Profile
-    // // save the user object
-    // return await this.userRepository.save(user);
+  public async deleteUser(id: number) {
+    // find the user with given ID
+    let user = await this.userRepository.findOneBy({ id });
+
+    // delete user
+    await this.userRepository.delete(id);
+
+    // delete the profile
+    if (user?.profile?.id) {
+      await this.profileRepository.delete(user.profile.id);
+    }
+
+    // send a response\
+    return { deleted: true };
   }
 }
