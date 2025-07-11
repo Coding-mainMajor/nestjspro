@@ -5,6 +5,7 @@ import { Tweet } from './tweet.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTweetDto } from './dto/create-tweet.dto';
 import { HashtagService } from 'src/hashtag/hashtag.service';
+import { UpdateTweetDTO } from './dto/update-tweet.dto';
 
 @Injectable()
 export class TweetService {
@@ -18,7 +19,7 @@ export class TweetService {
   public async getTweets(userId: number) {
     return await this.tweetRepository.find({
       where: { user: { id: userId } },
-      relations: { user: true },
+      relations: { user: true, hashtags: true },
     });
   }
 
@@ -38,6 +39,27 @@ export class TweetService {
       hashtags: hashtags,
     });
     // Save the tweet
+    return await this.tweetRepository.save(tweet);
+  }
+
+  public async updateTweet(updateTweetDto: UpdateTweetDTO) {
+    // find all hashtags
+    let hashtags = await this.hashtagService.findHashtags(
+      updateTweetDto.hashtags ?? [],
+    );
+
+    // find the tweet by Id
+    let tweet = await this.tweetRepository.findOneBy({ id: updateTweetDto.id });
+
+    // update properties of the tweet
+    if (!tweet) {
+      throw new Error(`Tweet with ID ${updateTweetDto.id} not found`);
+    }
+    tweet.text = updateTweetDto.text ?? tweet.text;
+    tweet.image = updateTweetDto.image ?? tweet.image;
+    tweet.hashtags = hashtags;
+
+    // save the tweet
     return await this.tweetRepository.save(tweet);
   }
 }
