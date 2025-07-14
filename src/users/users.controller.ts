@@ -18,10 +18,14 @@ export class UsersController {
   getUsers() {
     return this.usersService.getAllUsers();
   }
+  @Get(':id')
+  getUsersbyId(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.FindUserById(id);
+  }
 
   @Post()
   createUser(@Body() user: CreateUserDto) {
-    this.usersService.createUser(user);
+    return this.usersService.createUser(user);
   }
 
   @Delete(':id')
