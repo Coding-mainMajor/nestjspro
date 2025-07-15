@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { ConfigService } from '@nestjs/config';
 import { error, table } from 'console';
+import { UserAlreadyExistsException } from 'src/customExceptions/user-already-exist.exception';
 
 @Injectable()
 export class UsersService {
@@ -47,14 +48,19 @@ export class UsersService {
 
       userDto.profile = userDto.profile ?? {};
 
-      // check if user with same username/email already exist
-      const existingUser = await this.userRepository.findOne({
-        where: [{ username: userDto.username }, { email: userDto.email }],
+      // check if user with same username already exist
+      const existingUserWithUsername = await this.userRepository.findOne({
+        where: { username: userDto.username },
       });
-      if (existingUser) {
-        throw new BadRequestException(
-          'there is already a user with given username / email',
-        );
+      if (existingUserWithUsername) {
+        throw new UserAlreadyExistsException('username', userDto.username);
+      }
+      // check if user with same email already exist
+      const existingUserWithEmail = await this.userRepository.findOne({
+        where: { email: userDto.email },
+      });
+      if (existingUserWithEmail) {
+        throw new UserAlreadyExistsException('email', userDto.email);
       }
 
       // Create User Object
