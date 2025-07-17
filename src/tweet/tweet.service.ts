@@ -12,6 +12,7 @@ import { CreateTweetDto } from './dto/create-tweet.dto';
 import { HashtagService } from 'src/hashtag/hashtag.service';
 import { UpdateTweetDTO } from './dto/update-tweet.dto';
 import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
+import { PaginationProvider } from 'src/common/pagination/pagination.provider';
 
 @Injectable()
 export class TweetService {
@@ -20,6 +21,7 @@ export class TweetService {
     private readonly hashtagService: HashtagService,
     @InjectRepository(Tweet)
     private readonly tweetRepository: Repository<Tweet>,
+    private readonly paginationProvider: PaginationProvider,
   ) {}
 
   public async getTweets(userId: number, pageQueryDto: PaginationQueryDto) {
@@ -30,11 +32,11 @@ export class TweetService {
     //   throw new NotFoundException(`User with userId ${userId} is not found`);
     // }
 
-    return await this.tweetRepository.find({
-      where: { user: { id: userId } },
-      skip: (pageQueryDto.page! - 1) * pageQueryDto.limit!,
-      take: pageQueryDto.limit,
-    });
+    return await this.paginationProvider.paginationQuery(
+      pageQueryDto,
+      this.tweetRepository,
+      { user: { id: userId } },
+    );
   }
 
   public async CreateTweet(creatTweetDto: CreateTweetDto) {
