@@ -41,6 +41,7 @@ export class User {
 
   @OneToOne(() => Profile, (profile) => profile.user, {
     cascade: ['insert'],
+    // eager: true,
   })
   profile?: Profile;
 
