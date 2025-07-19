@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   RequestTimeoutException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import { Repository } from 'typeorm';
@@ -113,7 +114,7 @@ export class UsersService {
     // delete user
     await this.userRepository.delete(id);
 
-    // send a response\
+    // send a response
     return { deleted: true };
   }
 
@@ -134,6 +135,23 @@ export class UsersService {
             'was not found in users table.',
         },
       );
+    }
+    return user;
+  }
+
+  public async findUserByUsername(username: string) {
+    let user: User | null = null;
+    try {
+      user = await this.userRepository.findOneBy({
+        username,
+      });
+    } catch (error) {
+      throw new RequestTimeoutException(error, {
+        description: 'User with given username could not be found!',
+      });
+    }
+    if (!user) {
+      throw new UnauthorizedException('user does not exist!');
     }
     return user;
   }
