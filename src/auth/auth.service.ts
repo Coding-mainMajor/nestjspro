@@ -10,6 +10,7 @@ import authConfig from './config/auth.config';
 import { CreateUserDto } from 'src/users/dtos/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { HashingProvider } from './provider/hashing.provider';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,7 @@ export class AuthService {
     @Inject(authConfig.KEY)
     private readonly authconfig: ConfigType<typeof authConfig>,
     private readonly hashingProvider: HashingProvider,
+    private readonly jwtService: JwtService,
   ) {}
 
   isAuthenticated: Boolean = false;
@@ -36,12 +38,22 @@ export class AuthService {
     if (!isEqual) {
       throw new UnauthorizedException('Incorrect Password');
     }
-    // 3. IF THE PASSWORD MATHCH, LOGIN SUCDESS- RETURN ACCESSTOKEN
-    // SEND THE RESPONSE
+    // 3. IF THE PASSWORD MATCH, LOGIN SUCCESS- RETURN ACCESSTOKEN
+    // GENERATE JWT & SEND IT IN THE RESPONSE
+    const token = await this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+      },
+      {
+        secret: this.authconfig.secret,
+        expiresIn: this.authconfig.expiresIn,
+        audience: this.authconfig.audience,
+        issuer: this.authconfig.issuer,
+      },
+    );
     return {
-      data: user,
-      success: true,
-      message: 'User logged in successfully',
+      token: token,
     };
   }
 
