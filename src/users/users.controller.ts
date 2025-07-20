@@ -1,18 +1,13 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
   Param,
   ParseIntPipe,
-  Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dtos/create-user.dto';
 import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
-import { AuthorizeGuard } from 'src/auth/guards/authorize.guard';
 
 @Controller('users')
 // @UseGuards(AuthorizeGuard)
