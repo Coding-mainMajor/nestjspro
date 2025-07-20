@@ -17,6 +17,7 @@ export class AuthController {
   }
 
   // http://localhost:3000/auth/signup
+  @AllowAnonymous()
   @Post('signup')
   async signup(@Body() createuserDto: CreateUserDto) {
     return await this.authService.signup(createuserDto);
