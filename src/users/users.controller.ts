@@ -15,7 +15,7 @@ import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.d
 import { AuthorizeGuard } from 'src/auth/guards/authorize.guard';
 
 @Controller('users')
-@UseGuards(AuthorizeGuard)
+// @UseGuards(AuthorizeGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
