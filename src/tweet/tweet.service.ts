@@ -14,6 +14,7 @@ import { UpdateTweetDTO } from './dto/update-tweet.dto';
 import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
 import { PaginationProvider } from 'src/common/pagination/pagination.provider';
 import { Paginated } from 'src/common/pagination/pagination.interface';
+import { ActiveUserType } from 'src/auth/interfaces/active-user-type.interface';
 
 @Injectable()
 export class TweetService {
@@ -43,9 +44,9 @@ export class TweetService {
     );
   }
 
-  public async CreateTweet(creatTweetDto: CreateTweetDto) {
+  public async CreateTweet(creatTweetDto: CreateTweetDto, userId: number) {
     // Find user with the given userid from user table
-    let user = await this.userService.FindUserById(creatTweetDto.userId);
+    let user = await this.userService.FindUserById(userId);
 
     // Fetch all the hastags based on hastag array
     let hashtags = await this.hashtagService.findHashtags(
