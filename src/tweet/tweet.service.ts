@@ -1,8 +1,11 @@
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   Param,
   ParseIntPipe,
+  RequestTimeoutException,
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { Repository } from 'typeorm';
@@ -15,6 +18,8 @@ import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.d
 import { PaginationProvider } from 'src/common/pagination/pagination.provider';
 import { Paginated } from 'src/common/pagination/pagination.interface';
 import { ActiveUserType } from 'src/auth/interfaces/active-user-type.interface';
+import { User } from 'src/users/user.entity';
+import { Hashtag } from 'src/hashtag/hashtag.entity';
 
 @Injectable()
 export class TweetService {
@@ -44,23 +49,65 @@ export class TweetService {
     );
   }
 
-  public async CreateTweet(creatTweetDto: CreateTweetDto, userId: number) {
-    // Find user with the given userid from user table
-    let user = await this.userService.FindUserById(userId);
+  public async CreateTweet(createTweetDto: CreateTweetDto, userId: number) {
+    let user: User;
+    let hashtags: Hashtag[] = [];
+    try {
+      // Find user with the given userid from user table
+      user = await this.userService.FindUserById(userId);
 
-    // Fetch all the hastags based on hastag array
-    let hashtags = await this.hashtagService.findHashtags(
-      creatTweetDto.hashtags ?? [],
-    );
+      // Fetch all the hastags based on hastag array
+      // if (creatTweetDto.hashtags) {
+      //   hashtags = await this.hashtagService.findHashtags(
+      //     creatTweetDto.hashtags ?? [],
+      //   );
+      // }
+
+      if (createTweetDto.hashtags?.length) {
+        hashtags = await this.hashtagService.findHashtags(
+          createTweetDto.hashtags,
+        );
+        console.log(hashtags.length, createTweetDto.hashtags.length);
+        if (hashtags.length !== createTweetDto.hashtags.length) {
+          throw new BadRequestException(
+            'Some provided hashtags were not found.',
+          );
+        }
+      }
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new RequestTimeoutException('Failed to validate user or hashtags.');
+    }
 
     // Create a tweet
-    let tweet = await this.tweetRepository.create({
-      ...creatTweetDto,
-      user: user!,
-      hashtags: hashtags,
+    // let tweet = this.tweetRepository.create({
+    //   ...creatTweetDto,
+    //   user,
+    //   hashtags,
+    // });
+    // try {
+    //   // Save the tweet
+    //   return await this.tweetRepository.save(tweet);
+    // } catch (error) {
+    //   throw new ConflictException(error);
+    // }
+
+    const tweet = this.tweetRepository.create({
+      ...createTweetDto,
+      user,
+      hashtags,
     });
-    // Save the tweet
-    return await this.tweetRepository.save(tweet);
+
+    try {
+      return await this.tweetRepository.save(tweet);
+    } catch (error) {
+      throw new ConflictException('Failed to save tweet.');
+    }
   }
 
   public async updateTweet(updateTweetDto: UpdateTweetDTO) {
